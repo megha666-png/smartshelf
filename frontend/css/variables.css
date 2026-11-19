@@ -1,0 +1,70 @@
+/* SmartShelf Design Tokens & Theme Variables */
+/* Based on New Palette: Velvet Navy, Periwinkle Amethyst, Soft Hydrangea, Lavender Mist, Soft Porcelain, Muted Rose Currant */
+
+:root {
+  /* Exact Palette from User Spec Sheet */
+  --color-velvet-navy: #1B1A2A;
+  --color-periwinkle-amethyst: #5D6698;
+  --color-soft-hydrangea: #8790B7;
+  --color-lavender-mist: #EDECF4;
+  --color-soft-porcelain: #F6F5FA;
+  --color-muted-rose-currant: #BE6F7A;
+
+  /* Functional mappings: Light Mode */
+  --bg-primary: #F6F5FA;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #EDECF4;
+  --bg-accent: #E7E6F3;
+  --text-main: #1B1A2A;
+  --text-muted: #5E6278;
+  --text-dim: #9094AA;
+  --border-light: #E3E1EE;
+  --border-active: #5D6698;
+  --primary-accent: #5D6698;
+  --primary-hover: #4A5382;
+
+  /* Status Chips (Good, Medium, High risk) */
+  --badge-good-bg: #EAEBF7;
+  --badge-good-text: #485285;
+  --badge-medium-bg: #F7EFE2;
+  --badge-medium-text: #8C6734;
+  --badge-high-bg: #F9E8EB;
+  --badge-high-text: #9E4552;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 2px 8px rgba(27, 26, 42, 0.04);
+  --shadow-md: 0 8px 20px rgba(27, 26, 42, 0.07);
+  --shadow-lg: 0 16px 36px rgba(27, 26, 42, 0.10);
+
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-theme="dark"] {
+  /* Dark Mode mapping */
+  --bg-primary: #12111E;
+  --bg-card: #1B1A2A;
+  --bg-subtle: #26253B;
+  --bg-accent: #302E4A;
+  --text-main: #F5F4FA;
+  --text-muted: #A3A2BD;
+  --text-dim: #72708E;
+  --border-light: #2E2D44;
+  --border-active: #8790B7;
+  --primary-accent: #8790B7;
+  --primary-hover: #A0A9D1;
+
+  --badge-good-bg: #282C48;
+  --badge-good-text: #B4BEE6;
+  --badge-medium-bg: #3E3424;
+  --badge-medium-text: #E5BE79;
+  --badge-high-bg: #3E242B;
+  --badge-high-text: #F39B94;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.55);
+}

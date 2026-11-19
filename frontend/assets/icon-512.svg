@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6F7BAF"/>
+      <stop offset="100%" stop-color="#556094"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="8" stdDeviation="6" flood-color="#1B1A2A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Rounded App Icon Base -->
+  <rect width="512" height="512" rx="124" fill="url(#bgGrad)"/>
+
+  <!-- Four-Pointed Sparkle Star at Top Right -->
+  <path d="M 388 95 Q 388 135 418 135 Q 388 135 388 175 Q 388 135 358 135 Q 388 135 388 95 Z" fill="#FFFFFF" filter="url(#softShadow)"/>
+
+  <!-- Diagonal Soft Ambient Shadow for House -->
+  <path d="M 256 100 L 400 220 L 400 410 C 400 422 390 432 378 432 L 134 432 C 122 432 112 422 112 410 L 112 220 Z" 
+        fill="rgba(27, 26, 42, 0.12)" transform="translate(14, 18)"/>
+
+  <!-- Thick White House Outline -->
+  <path d="M 256 108 L 392 220 L 392 396 C 392 410 382 420 368 420 L 144 420 C 130 420 120 410 120 396 L 120 220 Z" 
+        fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)"/>
+
+  <!-- Inside Content: Left Bottle -->
+  <g transform="translate(155, 275)">
+    <!-- Cap -->
+    <rect x="5" y="0" width="54" height="20" rx="6" fill="#DDE3F8"/>
+    <!-- Body -->
+    <rect x="0" y="20" width="64" height="105" rx="14" fill="#C4CEF0"/>
+  </g>
+
+  <!-- Inside Content: Center Slim Bottle -->
+  <g transform="translate(235, 300)">
+    <!-- Pointed Cap -->
+    <path d="M 21 0 L 42 16 L 0 16 Z" fill="#EAEFFA"/>
+    <!-- Body -->
+    <rect x="0" y="16" width="42" height="84" rx="8" fill="#DDE3F8"/>
+  </g>
+
+  <!-- Inside Content: Right Potted Sprout/Plant -->
+  <g transform="translate(300, 245)">
+    <!-- Left Leaf -->
+    <path d="M -5 70 C -45 50 -55 10 -15 20 C 5 25 -2 55 -5 70 Z" fill="#D2DCF8"/>
+    <!-- Right Leaf -->
+    <path d="M 5 70 C 45 50 55 10 15 20 C -5 25 2 55 5 70 Z" fill="#DDE3F8"/>
+    <!-- Stem -->
+    <rect x="-3" y="65" width="6" height="30" rx="3" fill="#D2DCF8"/>
+    <!-- Rounded Pot -->
+    <path d="M -22 95 L 22 95 L 18 150 C 18 155 12 160 0 160 C -12 160 -18 155 -18 150 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

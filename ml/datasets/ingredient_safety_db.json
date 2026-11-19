@@ -1,0 +1,211 @@
+{
+  "ingredients": [
+    {
+      "name": "water",
+      "synonyms": ["aqua", "eau", "purified water", "distilled water"],
+      "category": "solvent",
+      "safety_rating": "safe",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Solvent and base formulation carrier",
+      "description": "Fundamental base for dissolving active ingredients and hydrating skin."
+    },
+    {
+      "name": "glycerin",
+      "synonyms": ["glycerine", "glycerol"],
+      "category": "humectant",
+      "safety_rating": "beneficial",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Deep hydration and moisture barrier preservation",
+      "description": "Potent humectant that attracts ambient water to the stratum corneum, restoring suppleness."
+    },
+    {
+      "name": "niacinamide",
+      "synonyms": ["nicotinamide", "vitamin b3"],
+      "category": "active",
+      "safety_rating": "beneficial",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Pore tightening, barrier repair, and sebum balance",
+      "description": "Essential water-soluble vitamin that calms redness, fades hyperpigmentation, and strengthens epidermal lipids."
+    },
+    {
+      "name": "hyaluronic acid",
+      "synonyms": ["sodium hyaluronate", "hydrolyzed hyaluronic acid"],
+      "category": "humectant",
+      "safety_rating": "beneficial",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Intense cellular plumping and hydration retention",
+      "description": "Naturally occurring glycosaminoglycan capable of binding up to 1,000 times its molecular weight in water."
+    },
+    {
+      "name": "ceramide np",
+      "synonyms": ["ceramide 3", "ceramides"],
+      "category": "lipid",
+      "safety_rating": "beneficial",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Restores and reinforces damaged stratum corneum barrier",
+      "description": "Identical to human skin lipid structure, prevents transepidermal water loss and protects against environmental irritants."
+    },
+    {
+      "name": "squalane",
+      "synonyms": ["squalene", "plant-derived squalane"],
+      "category": "emollient",
+      "safety_rating": "beneficial",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Lightweight biomimetic lipid nourishment",
+      "description": "Hydrogenated form of squalene; non-comedogenic oil that prevents lipid moisture loss."
+    },
+    {
+      "name": "tocopherol",
+      "synonyms": ["vitamin e", "tocopheryl acetate"],
+      "category": "antioxidant",
+      "safety_rating": "safe",
+      "hazard_level": 1,
+      "flagged": false,
+      "purpose": "Free radical neutralization and lipid stabilization",
+      "description": "Protects cosmetic formulation oils from rancidity while providing cellular antioxidant defense."
+    },
+    {
+      "name": "fragrance",
+      "synonyms": ["parfum", "perfume", "aroma", "synthetic fragrance"],
+      "category": "sensitizer",
+      "safety_rating": "concerning",
+      "hazard_level": 4,
+      "flagged": true,
+      "flag_reason": "High incidence of contact dermatitis, allergic sensitisation, and hidden phthalates",
+      "purpose": "Aromatic mask and olfactory enhancement",
+      "description": "Proprietary chemical mixture commonly associated with contact allergies, barrier disruption, and headache triggers in sensitive individuals."
+    },
+    {
+      "name": "methylparaben",
+      "synonyms": ["propylparaben", "butylparaben", "ethylparaben", "parabens"],
+      "category": "preservative",
+      "safety_rating": "concerning",
+      "hazard_level": 4,
+      "flagged": true,
+      "flag_reason": "Endocrine disruption concerns and weak estrogenic mimicry",
+      "purpose": "Antimicrobial & fungal preservation",
+      "description": "Synthetic ester used to inhibit bacterial and fungal proliferation; flagged in modern clean beauty regulations for potential bioaccumulation."
+    },
+    {
+      "name": "sodium lauryl sulfate",
+      "synonyms": ["sls"],
+      "category": "surfactant",
+      "safety_rating": "harsh",
+      "hazard_level": 3,
+      "flagged": true,
+      "flag_reason": "Severe protein denaturation and lipid barrier stripping",
+      "purpose": "High-foaming anionic detergent and emulsifier",
+      "description": "Effective cleansing agent but known to disrupt cutaneous lipid bilayers, causing dryness, redness, and scalp irritation."
+    },
+    {
+      "name": "sodium laureth sulfate",
+      "synonyms": ["sles"],
+      "category": "surfactant",
+      "safety_rating": "moderate",
+      "hazard_level": 2,
+      "flagged": false,
+      "flag_reason": "Potential 1,4-dioxane contamination during ethoxylation",
+      "purpose": "Foaming surfactant",
+      "description": "Gentler ethoxylated variant of SLS, generally well tolerated unless contaminated with ethoxylation byproducts."
+    },
+    {
+      "name": "dmdm hydantoin",
+      "synonyms": ["imidazolidinyl urea", "quaternium-15", "diazolidinyl urea"],
+      "category": "preservative",
+      "safety_rating": "concerning",
+      "hazard_level": 4,
+      "flagged": true,
+      "flag_reason": "Formaldehyde-releasing antimicrobial agent",
+      "purpose": "Broad-spectrum antimicrobial preservation",
+      "description": "Slowly decomposes to release micro-doses of formaldehyde to kill microbes; known trigger for contact dermatitis."
+    },
+    {
+      "name": "phenoxyethanol",
+      "synonyms": ["2-phenoxyethanol"],
+      "category": "preservative",
+      "safety_rating": "safe",
+      "hazard_level": 1,
+      "flagged": false,
+      "purpose": "Widely tolerated preservative alternative to parabens",
+      "description": "Effective antimicrobial agent approved globally at concentrations under 1%."
+    },
+    {
+      "name": "cetearyl alcohol",
+      "synonyms": ["cetyl alcohol", "stearyl alcohol"],
+      "category": "fatty alcohol",
+      "safety_rating": "safe",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Emollient and emulsion stabilizer",
+      "description": "Non-drying fatty alcohol that gives creams silky consistency and conditions skin."
+    },
+    {
+      "name": "dimethicone",
+      "synonyms": ["polydimethylsiloxane", "cyclomethicone"],
+      "category": "silicone",
+      "safety_rating": "safe",
+      "hazard_level": 1,
+      "flagged": false,
+      "purpose": "Occlusive protective barrier and slip agent",
+      "description": "Forms a breathable physical seal over the epidermis to prevent moisture evaporation without suffocating skin."
+    },
+    {
+      "name": "salicylic acid",
+      "synonyms": ["bha", "beta hydroxy acid"],
+      "category": "exfoliant",
+      "safety_rating": "active",
+      "hazard_level": 2,
+      "flagged": false,
+      "purpose": "Lipophilic pore clearing and comedone dissolution",
+      "description": "Penetrates lipid-rich sebaceous follicles to dissolve debris and soothe inflammatory acne."
+    },
+    {
+      "name": "butylated hydroxytoluene",
+      "synonyms": ["bht", "bha antioxidant"],
+      "category": "antioxidant",
+      "safety_rating": "concerning",
+      "hazard_level": 3,
+      "flagged": true,
+      "flag_reason": "Synthetic preservative linked to organ toxicity and skin sensitivity",
+      "purpose": "Lipid oxidation retardant",
+      "description": "Synthetic antioxidant widely substituted in modern formulations due to bio-persistence and endocrine questions."
+    },
+    {
+      "name": "phthalates",
+      "synonyms": ["dep", "diethyl phthalate", "dibutyl phthalate"],
+      "category": "plasticizer",
+      "safety_rating": "concerning",
+      "hazard_level": 5,
+      "flagged": true,
+      "flag_reason": "Documented endocrine disruptive chemical",
+      "purpose": "Fragrance fixing and polymer flexibility",
+      "description": "Commonly concealed under generic 'Fragrance' labels, associated with hormonal imbalance."
+    },
+    {
+      "name": "citric acid",
+      "synonyms": ["sodium citrate"],
+      "category": "buffering",
+      "safety_rating": "safe",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "pH balancing and mild AHA radiance",
+      "description": "Natural alpha hydroxy acid used primarily to balance cosmetic formulations to skin's optimal acidic pH (~5.5)."
+    },
+    {
+      "name": "xanthan gum",
+      "synonyms": ["cellulose gum"],
+      "category": "thickener",
+      "safety_rating": "safe",
+      "hazard_level": 0,
+      "flagged": false,
+      "purpose": "Natural polysaccharide viscosity enhancer",
+      "description": "Non-irritating plant-fermented polysaccharide that stabilizes emulsions and enhances texture."
+    }
+  ]
+}
