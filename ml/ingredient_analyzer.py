@@ -57,7 +57,7 @@ TOXIC_PATTERNS = [
     ),
     # 7. Ethanolamines (DEA, MEA, TEA)
     (
-        r"\b(diethanolamine|\bdea\b|monoethanolamine|\bmea\b|triethanolamine|\btea\b|cocamide\s*dea|lauramide\s*dea|ethanolamine[s]?)\b",
+        r"\b(diethanolamine|\bdea\b|monoethanolamine|\bmea\b|triethanolamine|(?<!green\s)(?<!white\s)(?<!black\s)\btea\b(?!\s*tree)(?!\s*leaf)|cocamide\s*dea|lauramide\s*dea|ethanolamine[s]?)\b",
         "Ethanolamines (DEA / MEA / TEA)",
         "Surfactants and pH adjusters that can react with preservatives to form carcinogenic nitrosamines.",
         4
@@ -134,7 +134,7 @@ TOXIC_PATTERNS = [
     ),
     # 18. Siloxanes / Silicones
     (
-        r"\b(cyclomethicone|cyclopentasiloxane|cyclohexasiloxane|cyclotetrasiloxane|dimethic?one|dimethio?one|methicone|siloxane[s]?)\b",
+        r"\b(cyclomethicone|cyclopentasiloxane|[ly]yclop[a-z0-9]*|cyclohexasiloxane|cyclotetrasiloxane|dimethic?one|dimethio?one|dityghen|methicone|siloxane[s]?)\b",
         "Siloxanes (Cyclomethicone / Dimethicone)",
         "Synthetic silicone compounds linked to bioaccumulation, skin occlusion, and environmental persistence.",
         3
@@ -148,7 +148,7 @@ TOXIC_PATTERNS = [
     ),
     # 20. Synthetic Fragrance / Concealed Additives
     (
-        r"\b(fragrance|parfum|perfume|synthetic\s*aroma|butylphenyl\s*methylpropional|\blilial\b)\b",
+        r"\b(fragrance|parfum|perfume|pbrfumb|synthetic\s*aroma|butylphenyl\s*methylpropional|\blilial\b)\b",
         "Concealed Fragrance / Phthalate Complex",
         "Complex undisclosed fragrance or toxic Lilial allergen; banned in the EU due to reproductive toxicity and sensitizing reactions.",
         4
@@ -169,7 +169,7 @@ TOXIC_PATTERNS = [
     ),
     # 23. Phenoxyethanol (Contact allergen & sensitizer)
     (
-        r"\b(phenoxyethanol|2-phenoxyethanol)\b",
+        r"\b(phenoxy\s*ethanol|2-phenoxyethanol)\b",
         "Phenoxyethanol",
         "Synthetic preservative and common contact allergen; can trigger contact dermatitis, eczema flares, and eye/skin stinging.",
         3
@@ -231,6 +231,7 @@ class IngredientAnalyzer:
 
         # Remove URLs and email addresses
         cleaned = re.sub(r"https?://\S+|www\.\S+|\S+@\S+", "", cleaned)
+        cleaned = re.sub(r"\b(?:www\s+[a-z0-9]+|www\.[a-z0-9]+|rebeasinsides|incidecoder)\b.*", "", cleaned, flags=re.IGNORECASE)
 
         # Cut off standard packaging/use sections if no newline was present
         cleaned = re.split(r"(?:directions|how to use|manufactured by|mfg\.? by|mktd\.? by|warning|caution|batch no|use before|see above|for external use|net wt|net vol)\s*[:\-\—]", cleaned, flags=re.IGNORECASE)[0]
@@ -238,13 +239,48 @@ class IngredientAnalyzer:
         # Clean stray OCR artifacts (=, ?, *, ~, #, @)
         cleaned = re.sub(r"[\?\#\@\*\=\~]+", " ", cleaned)
 
-        # Fix OCR typos on packaging line wraps:
-        # e.g., 'MICROCRYSTALLINE\nWAY' -> 'MICROCRYSTALLINE WAX'
-        cleaned = re.sub(r"\bway\b", "wax", cleaned, flags=re.IGNORECASE)
+        # Determine if original text uses standard punctuation delimiters
+        original_has_delimiters = bool(re.search(r"[,;•|]", text))
 
-        # Connect wrapped ingredient lines where newline wasn't preceded by punctuation
-        # e.g. "Hydrogenated \n Styrene/Isoprene Copolymer" -> "Hydrogenated Styrene/Isoprene Copolymer"
-        cleaned = re.sub(r"(?<![,\.\;\:])\s*\n\s*", " ", cleaned)
+        # Common packaging OCR typo normalizations
+        typo_replacements = [
+            (r"\b[Ll]yclop[a-z0-9]*\b", "Cyclopentasiloxane"),
+            (r"\b[Dd]ityghen\b", "Dimethicone"),
+            (r"\b[Cc]ross\s+[Mm]es\s+[Ss]illica\b", "Silica"),
+            (r"\b[Mm]es\s+[Ss]illica\b", "Silica"),
+            (r"\b[Ss]illica\b", "Silica"),
+            (r"\bphenoxy\s*ethanol\b", "Phenoxyethanol"),
+            (r"\[\s*[Rr]on\s+[Oo]xide\b", "Iron Oxide"),
+            (r"\b[Rr]on\s+[Oo]xide\b", "Iron Oxide"),
+            (r"\b[Pp]brfumb\b", "Perfume"),
+            (r"\b[Hh]ig\s+Citronellal\b", "Hydroxycitronellal"),
+            (r"\b[Mm]ethyjpianira\b", "Methylparaben"),
+            (r"\bway\b", "wax"),
+        ]
+        for pat, rep in typo_replacements:
+            cleaned = re.sub(pat, rep, cleaned, flags=re.IGNORECASE)
+
+        # Split multi-compound lines when OCR misses comma delimiters
+        known_compounds = [
+            r"Cyclopentasiloxane", r"Titanium Dioxide", r"Aluminium Hydroxide",
+            r"Acrylate Crosspolymer", r"Phenoxyethanol", r"Dimethicone",
+            r"Methylparaben", r"Geraniol", r"Hexyl Cinnamal", r"Hydroxycitronellal",
+            r"Citronellol", r"Limonene", r"Linalool", r"Perfume", r"Talc", r"Silica"
+        ]
+        color_modifiers = {"yellow", "red", "black", "white", "brown", "hydrated", "synthetic", "colloidal", "pure", "natural", "organic"}
+        for comp in known_compounds:
+            def _split_comp(m):
+                prev_word = m.group(1).lower()
+                if prev_word in color_modifiers:
+                    return m.group(0)
+                return f"{m.group(1)}, {m.group(2)}"
+            cleaned = re.sub(r"(\b\w+\b)\s+(" + comp + r"\b)", _split_comp, cleaned, flags=re.IGNORECASE)
+
+        # Only connect wrapped lines if standard comma/semicolon/bullet delimiters existed originally.
+        # If the text is purely line-separated (e.g. OCR list or ingredient list without commas),
+        # keep each line as an independent ingredient token!
+        if original_has_delimiters:
+            cleaned = re.sub(r"(?<![,\.\;\:])\s*\n\s*", " ", cleaned)
 
         # Split conjunction pairs between chemical compounds cleanly:
         # e.g. "PALMITIC ACID (AND) STEARIC ACID" -> "PALMITIC ACID, STEARIC ACID"
@@ -375,10 +411,9 @@ class IngredientAnalyzer:
                 raw_text = ", ".join(str(x) for x in ingredient_list_or_text)
 
         raw_items = self.parse_raw_text(raw_text)
-        isolated_text = self.extract_ingredient_section_text(raw_text)
-
-        # Full text search for chemicals should be scoped to the isolated ingredients block
-        full_text_lower = (isolated_text or raw_text).lower()
+        
+        # Build normalized text representation from parsed tokens for global regex scanning
+        full_text_lower = (", ".join(raw_items) if raw_items else self.extract_ingredient_section_text(raw_text)).lower()
 
         # Product identity recognition from label
         recognized_product_info = None
