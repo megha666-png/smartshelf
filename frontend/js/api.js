@@ -74,5 +74,6 @@ export const API = {
   },
   getExpenditureHistory: (household_id = 1) => API.request(`/api/expenditure/history?household_id=${household_id}`),
   getNotifications: () => API.request("/api/notifications"),
-  markNotificationRead: (id) => API.request(`/api/notifications/${id}/read`, { method: "POST" })
+  markNotificationRead: (id) => API.request(`/api/notifications/${id}/read`, { method: "POST" }),
+  markAllNotificationsRead: () => API.request("/api/notifications/read-all", { method: "POST" })
 };

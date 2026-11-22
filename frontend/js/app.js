@@ -2288,19 +2288,167 @@ window.openAddProductModal = function() {
   if (modal) modal.classList.add("active");
 };
 
-window.openNotificationsModal = function() {
+window.openNotificationsModal = async function() {
   const modal = document.getElementById("notificationsModal");
   const list = document.getElementById("notificationsModalList");
+  const subtitle = document.getElementById("notificationsSubtitle");
   if (!modal || !list) return;
 
-  list.innerHTML = state.notifications.map(n => `
-    <div style="background: var(--bg-subtle); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; border-left: 3px solid ${n.type === 'waste_risk' ? 'var(--color-muted-rose-currant)' : 'var(--color-periwinkle-amethyst)'};">
-      <div style="font-weight: 700; font-size: 13px; margin-bottom: 2px;">${escapeHtml(n.title)}</div>
-      <div style="font-size: 12px; color: var(--text-muted);">${escapeHtml(n.message)}</div>
-    </div>
-  `).join('');
+  // Refresh latest notifications from server
+  try {
+    state.notifications = await API.getNotifications();
+    updateHouseholdUI();
+  } catch (err) {
+    console.warn("Could not refresh notifications:", err);
+  }
 
+  renderNotificationsList();
   modal.classList.add("active");
+};
+
+function renderNotificationsList() {
+  const list = document.getElementById("notificationsModalList");
+  const subtitle = document.getElementById("notificationsSubtitle");
+  if (!list) return;
+
+  const notifs = state.notifications || [];
+  const unreadCount = notifs.filter(n => !n.is_read).length;
+
+  if (subtitle) {
+    subtitle.textContent = unreadCount > 0 ? `${unreadCount} unread notification(s)` : 'All caught up';
+  }
+
+  if (notifs.length === 0) {
+    list.innerHTML = `
+      <div style="text-align: center; padding: 32px 16px; color: var(--text-muted);">
+        <div style="font-size: 28px; margin-bottom: 8px;">🔔</div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">No notifications right now</div>
+        <div style="font-size: 11px; margin-top: 4px;">Smart alerts for expiry, restock, and spend will appear here.</div>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = notifs.map(n => {
+    let borderCol = "var(--color-periwinkle-amethyst)";
+    let badgeBg = "rgba(93, 102, 152, 0.12)";
+    let badgeText = "var(--color-periwinkle-amethyst)";
+    let icon = "🔔";
+
+    if (n.type === "expired") {
+      borderCol = "#DC2626";
+      badgeBg = "#FEE2E2";
+      badgeText = "#B91C1C";
+      icon = "⚠️";
+    } else if (n.type === "expiring_soon") {
+      borderCol = "#D97706";
+      badgeBg = "#FEF3C7";
+      badgeText = "#92400E";
+      icon = "⏳";
+    } else if (n.type === "need_to_buy") {
+      borderCol = "#2563EB";
+      badgeBg = "#EFF6FF";
+      badgeText = "#1D4ED8";
+      icon = "🛒";
+    } else if (n.type === "monthly_spent") {
+      borderCol = "#059669";
+      badgeBg = "#D1FAE5";
+      badgeText = "#065F46";
+      icon = "💰";
+    }
+
+    const isUnread = !n.is_read;
+
+    return `
+      <div 
+        id="notif-card-${n.id}"
+        style="background: ${isUnread ? 'var(--bg-card)' : 'var(--bg-subtle)'}; padding: 12px; border-radius: var(--radius-sm); margin-bottom: 8px; border: 1px solid ${isUnread ? borderCol : 'var(--border-light)'}; border-left: 3.5px solid ${borderCol}; transition: all 0.2s ease; cursor: pointer;"
+        onclick="window.handleNotificationClick(${n.id}, '${escapeHtml(n.type)}', '${escapeHtml((n.title || '').replace(/'/g, "\\'"))}')"
+      >
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 14px;">${icon}</span>
+            <div style="font-weight: 800; font-size: 13px; color: var(--text-main); line-height: 1.3;">
+              ${escapeHtml(n.title)}
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            ${isUnread ? `
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #EF4444; display: inline-block;"></span>
+            ` : `
+              <span style="font-size: 10px; color: var(--text-dim);">Read</span>
+            `}
+          </div>
+        </div>
+
+        <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; margin: 6px 0 8px 0;">
+          ${escapeHtml(n.message)}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px dashed var(--border-light);">
+          <span style="font-size: 10px; font-weight: 700; color: ${badgeText}; background: ${badgeBg}; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">
+            ${escapeHtml(n.type.replace(/_/g, ' '))}
+          </span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${isUnread ? `
+              <button class="link-btn" style="color: var(--text-muted); font-size: 11px;" onclick="event.stopPropagation(); window.markSingleNotificationRead(${n.id})">
+                Mark read
+              </button>
+            ` : ''}
+            <span style="color: var(--color-periwinkle-amethyst); font-size: 11px; font-weight: 700;">
+              ${escapeHtml(n.action_text || 'View')} ›
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.markSingleNotificationRead = async function(id) {
+  try {
+    await API.markNotificationRead(id);
+    const n = state.notifications.find(item => item.id === id);
+    if (n) n.is_read = 1;
+    updateHouseholdUI();
+    renderNotificationsList();
+  } catch (err) {
+    console.error("Failed to mark notification read:", err);
+  }
+};
+
+window.markAllNotificationsAsRead = async function() {
+  try {
+    await API.markAllNotificationsRead();
+    state.notifications.forEach(n => { n.is_read = 1; });
+    updateHouseholdUI();
+    renderNotificationsList();
+  } catch (err) {
+    console.error("Failed to mark all notifications read:", err);
+  }
+};
+
+window.handleNotificationClick = async function(id, type, title) {
+  // Mark as read immediately
+  await window.markSingleNotificationRead(id);
+  const modal = document.getElementById("notificationsModal");
+  if (modal) modal.classList.remove("active");
+
+  if (type === "monthly_spent") {
+    window.openExpenditureModal();
+  } else if (type === "expired" || type === "expiring_soon") {
+    window.switchTab("inventory");
+    const searchInput = document.getElementById("inventorySearch");
+    const prodNameMatch = title.replace(/^(Expired|Expiring Soon):\s*/i, "").trim();
+    if (searchInput && prodNameMatch) {
+      searchInput.value = prodNameMatch;
+      searchInput.dispatchEvent(new Event("input"));
+    }
+  } else if (type === "need_to_buy") {
+    window.switchTab("ai-analysis");
+  } else {
+    window.switchTab("inventory");
+  }
 };
 
 // -------------------------------------------------------------

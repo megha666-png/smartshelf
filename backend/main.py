@@ -648,8 +648,84 @@ def get_analytics_data(household_id: int = 1):
 def get_notifications(household_id: int = 1):
     with db.get_connection() as conn:
         cur = conn.cursor()
+        today = date.today()
+        now = datetime.now()
+
+        cur.execute("SELECT * FROM products WHERE household_id = ?;", (household_id,))
+        products = [dict(p) for p in cur.fetchall()]
+
+        cur.execute("SELECT title FROM notifications WHERE household_id = ?;", (household_id,))
+        existing_titles = {row[0].lower() for row in cur.fetchall()}
+
+        new_notifs = []
+
+        # 1. Expired Products & Expiring Soon Products
+        for p in products:
+            exp = p.get("expiry_date")
+            if exp:
+                try:
+                    exp_date = date.fromisoformat(exp)
+                    diff = (exp_date - today).days
+                    if diff < 0:
+                        t = f"Expired: {p['name']}"
+                        if t.lower() not in existing_titles:
+                            new_notifs.append((
+                                household_id, 1, "expired", t,
+                                f"{p['name']} passed its expiry date {abs(diff)} days ago ({exp}). Safe disposal or replacement advised.",
+                                "View Item"
+                            ))
+                            existing_titles.add(t.lower())
+                    elif 0 <= diff <= 14:
+                        t = f"Expiring Soon: {p['name']}"
+                        if t.lower() not in existing_titles:
+                            new_notifs.append((
+                                household_id, 1, "expiring_soon", t,
+                                f"{p['name']} will expire in {diff} days ({exp}). Prioritize using it before it spoils.",
+                                "View Item"
+                            ))
+                            existing_titles.add(t.lower())
+                except Exception:
+                    pass
+
+        # 2. Need to Buy: Products that are finished / 0 quantity
+        finished_seen = set()
+        for p in products:
+            p_name = (p.get("name") or "").strip()
+            if p.get("quantity", 0) == 0 or p.get("status") == "finished":
+                if p_name.lower() in finished_seen:
+                    continue
+                finished_seen.add(p_name.lower())
+                t = f"Need to Buy: {p_name}"
+                if t.lower() not in existing_titles:
+                    new_notifs.append((
+                        household_id, 1, "need_to_buy", t,
+                        f"{p_name} is finished / out of stock (0 units remaining). Add it to your restock list.",
+                        "Restock Now"
+                    ))
+                    existing_titles.add(t.lower())
+
+        # 3. Monthly Spend Notification on Month End
+        month_name = now.strftime("%B")
+        cur.execute("SELECT SUM(price * quantity) FROM products WHERE household_id = ?;", (household_id,))
+        total_spent = float(cur.fetchone()[0] or 0.0)
+        m_title = f"{month_name} Monthly Spending Summary"
+        if m_title.lower() not in existing_titles:
+            new_notifs.append((
+                household_id, 1, "monthly_spent", m_title,
+                f"Month-end financial update: Your household spent ₹ {int(total_spent):,} on home essentials for {month_name}. Check your monthly breakdown for savings and waste reduction!",
+                "View Summary"
+            ))
+            existing_titles.add(m_title.lower())
+
+        if new_notifs:
+            cur.executemany("""
+                INSERT INTO notifications (household_id, user_id, type, title, message, action_text, is_read)
+                VALUES (?, ?, ?, ?, ?, ?, 0);
+            """, new_notifs)
+            conn.commit()
+
         cur.execute(
-            "SELECT * FROM notifications WHERE household_id = ? ORDER BY id DESC LIMIT 20;",
+            "SELECT * FROM notifications WHERE household_id = ? ORDER BY id DESC LIMIT 30;",
             (household_id,)
         )
         return [dict(n) for n in cur.fetchall()]
@@ -659,6 +735,14 @@ def mark_notification_read(notification_id: int):
     with db.get_connection() as conn:
         cur = conn.cursor()
         cur.execute("UPDATE notifications SET is_read = 1 WHERE id = ?;", (notification_id,))
+        conn.commit()
+    return {"success": True}
+
+@app.post("/api/notifications/read-all")
+def mark_all_notifications_read(household_id: int = 1):
+    with db.get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("UPDATE notifications SET is_read = 1 WHERE household_id = ?;", (household_id,))
         conn.commit()
     return {"success": True}
 

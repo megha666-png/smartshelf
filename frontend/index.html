@@ -709,12 +709,20 @@
 
   <!-- MODAL: Notifications -->
   <div class="modal-overlay" id="notificationsModal">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="max-width: 440px;">
       <div class="modal-header">
-        <h3 style="font-size: 16px;">Notifications</h3>
-        <button class="close-btn">&times;</button>
+        <div>
+          <h3 style="font-size: 16px; font-weight: 800;">Notifications</h3>
+          <p id="notificationsSubtitle" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Smart Alerts & Activity</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="markAllReadBtn" class="link-btn" style="color: var(--color-periwinkle-amethyst); font-size: 11px; font-weight: 700;" onclick="window.markAllNotificationsAsRead()">
+            Mark all read
+          </button>
+          <button class="close-btn">&times;</button>
+        </div>
       </div>
-      <div id="notificationsModalList"></div>
+      <div id="notificationsModalList" style="max-height: 420px; overflow-y: auto; padding-right: 2px;"></div>
     </div>
   </div>
 

@@ -337,7 +337,85 @@ class SmartShelfRequestHandler(SimpleHTTPRequestHandler):
         elif path == "/api/notifications":
             with db.get_connection() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM notifications WHERE household_id = 1 ORDER BY id DESC LIMIT 20;")
+                # Dynamically generate smart notifications based on live inventory state
+                today = date.today()
+                now = datetime.now()
+                hh_id = 1
+
+                cur.execute("SELECT * FROM products WHERE household_id = ?;", (hh_id,))
+                products = [dict(p) for p in cur.fetchall()]
+
+                cur.execute("SELECT title FROM notifications WHERE household_id = ?;", (hh_id,))
+                existing_titles = {row[0].lower() for row in cur.fetchall()}
+
+                new_notifs = []
+
+                # 1. Expired Products & Expiring Soon Products
+                for p in products:
+                    exp = p.get("expiry_date")
+                    if exp:
+                        try:
+                            exp_date = date.fromisoformat(exp)
+                            diff = (exp_date - today).days
+                            if diff < 0:
+                                t = f"Expired: {p['name']}"
+                                if t.lower() not in existing_titles:
+                                    new_notifs.append((
+                                        hh_id, 1, "expired", t,
+                                        f"{p['name']} passed its expiry date {abs(diff)} days ago ({exp}). Safe disposal or replacement advised.",
+                                        "View Item"
+                                    ))
+                                    existing_titles.add(t.lower())
+                            elif 0 <= diff <= 14:
+                                t = f"Expiring Soon: {p['name']}"
+                                if t.lower() not in existing_titles:
+                                    new_notifs.append((
+                                        hh_id, 1, "expiring_soon", t,
+                                        f"{p['name']} will expire in {diff} days ({exp}). Prioritize using it before it spoils.",
+                                        "View Item"
+                                    ))
+                                    existing_titles.add(t.lower())
+                        except Exception:
+                            pass
+
+                # 2. Need to Buy: Products that are finished / 0 quantity
+                finished_seen = set()
+                for p in products:
+                    p_name = (p.get("name") or "").strip()
+                    if p.get("quantity", 0) == 0 or p.get("status") == "finished":
+                        if p_name.lower() in finished_seen:
+                            continue
+                        finished_seen.add(p_name.lower())
+                        t = f"Need to Buy: {p_name}"
+                        if t.lower() not in existing_titles:
+                            new_notifs.append((
+                                hh_id, 1, "need_to_buy", t,
+                                f"{p_name} is finished / out of stock (0 units remaining). Add it to your restock list.",
+                                "Restock Now"
+                            ))
+                            existing_titles.add(t.lower())
+
+                # 3. Monthly Spend Notification on Month End
+                month_name = now.strftime("%B")
+                cur.execute("SELECT SUM(price * quantity) FROM products WHERE household_id = ?;", (hh_id,))
+                total_spent = float(cur.fetchone()[0] or 0.0)
+                m_title = f"{month_name} Monthly Spending Summary"
+                if m_title.lower() not in existing_titles:
+                    new_notifs.append((
+                        hh_id, 1, "monthly_spent", m_title,
+                        f"Month-end financial update: Your household spent ₹ {int(total_spent):,} on home essentials for {month_name}. Check your monthly breakdown for savings and waste reduction!",
+                        "View Summary"
+                    ))
+                    existing_titles.add(m_title.lower())
+
+                if new_notifs:
+                    cur.executemany("""
+                        INSERT INTO notifications (household_id, user_id, type, title, message, action_text, is_read)
+                        VALUES (?, ?, ?, ?, ?, ?, 0);
+                    """, new_notifs)
+                    conn.commit()
+
+                cur.execute("SELECT * FROM notifications WHERE household_id = ? ORDER BY id DESC LIMIT 30;", (hh_id,))
                 return self.send_json([dict(n) for n in cur.fetchall()])
 
         return self.send_json({"detail": "Not found"}, 404)
@@ -534,6 +612,23 @@ class SmartShelfRequestHandler(SimpleHTTPRequestHandler):
                 cur.execute("UPDATE households SET name = ? WHERE id = ?;", (new_name, hh_id))
                 conn.commit()
             return self.send_json({"success": True, "name": new_name, "message": "Household name updated successfully"})
+
+        elif path.startswith("/api/notifications/") and path.endswith("/read"):
+            parts = path.split("/")
+            if len(parts) >= 4 and parts[3].isdigit():
+                notif_id = int(parts[3])
+                with db.get_connection() as conn:
+                    cur = conn.cursor()
+                    cur.execute("UPDATE notifications SET is_read = 1 WHERE id = ?;", (notif_id,))
+                    conn.commit()
+                return self.send_json({"success": True, "message": "Notification marked as read"})
+
+        elif path == "/api/notifications/read-all":
+            with db.get_connection() as conn:
+                cur = conn.cursor()
+                cur.execute("UPDATE notifications SET is_read = 1 WHERE household_id = 1;")
+                conn.commit()
+            return self.send_json({"success": True, "message": "All notifications marked as read"})
 
         return self.send_json({"detail": "Not found"}, 404)
 
