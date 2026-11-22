@@ -128,7 +128,11 @@ class InventoryRecommender:
 
             if risk_level == "high":
                 attention_items.append({
+                    "id": item.get("id"),
                     "name": name,
+                    "category": category,
+                    "expiry_date": item.get("expiry_date"),
+                    "quantity": qty,
                     "reason": risk_eval["explanation"],
                     "risk_level": "high",
                     "price": price,

@@ -224,7 +224,7 @@ function renderDashboard() {
       </div>
 
       <!-- Attention Items -->
-      <div class="risk-tile-row ${attentionItems.length > 0 ? 'tile-waste' : 'tile-ai'}" onclick="window.switchTab('ai-analysis')">
+      <div class="risk-tile-row ${attentionItems.length > 0 ? 'tile-waste' : 'tile-ai'}" onclick="window.openAttentionItemsModal()">
         <div class="tile-left">
           <div class="tile-icon-circle">${attentionItems.length > 0 ? '!' : '✓'}</div>
           <div class="tile-content">
@@ -2410,6 +2410,115 @@ function renderExpenditureModalContent(d) {
     </button>
   `;
 }
+
+// -------------------------------------------------------------
+// Dedicated Attention Items Modal (Insights Detail)
+// -------------------------------------------------------------
+window.openAttentionItemsModal = function() {
+  const modal = document.getElementById("attentionItemsModal");
+  const modalBody = document.getElementById("attentionItemsModalBody");
+  const subtitle = document.getElementById("attentionItemsSubtitle");
+  if (!modal || !modalBody) return;
+
+  const items = (state.analysis && state.analysis.attention_items) ? state.analysis.attention_items : [];
+
+  if (subtitle) {
+    subtitle.textContent = items.length > 0 
+      ? `${items.length} product(s) flagged for expiry or waste risk`
+      : 'All stock is safe & healthy';
+  }
+
+  if (items.length === 0) {
+    modalBody.innerHTML = `
+      <div style="text-align: center; padding: 24px 12px;">
+        <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(76, 175, 80, 0.12); color: #2e7d32; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 12px auto; font-weight: 800;">
+          ✓
+        </div>
+        <h4 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">All stock is healthy!</h4>
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-bottom: 20px;">
+          No items have expired or exceed safe consumption runway.
+        </p>
+        <button class="btn-primary" onclick="document.getElementById('attentionItemsModal').classList.remove('active')">
+          Done
+        </button>
+      </div>
+    `;
+    modal.classList.add("active");
+    return;
+  }
+
+  modalBody.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 12px; max-height: 380px; overflow-y: auto; padding-right: 4px; margin-bottom: 18px;">
+      ${items.map(item => {
+        const prod = state.products.find(p => (item.id && p.id === item.id) || p.name.toLowerCase() === item.name.toLowerCase());
+        const cat = item.category || (prod ? prod.category : 'Personal Care');
+        const iconSvg = getProductMinimalIconSvg(item.name, cat);
+        const daysExp = item.days_to_expiry !== undefined ? item.days_to_expiry : null;
+        const runway = item.runway_days !== undefined ? item.runway_days : null;
+
+        let statusBadge = '';
+        if (daysExp !== null && daysExp < 0) {
+          statusBadge = `<span style="font-size: 10px; font-weight: 800; color: #b71c1c; background: #ffebee; padding: 2px 7px; border-radius: 4px; text-transform: uppercase;">Expired ${Math.abs(daysExp)}d ago</span>`;
+        } else if (daysExp !== null && daysExp <= 7) {
+          statusBadge = `<span style="font-size: 10px; font-weight: 800; color: #b71c1c; background: #ffebee; padding: 2px 7px; border-radius: 4px; text-transform: uppercase;">Expires in ${daysExp}d</span>`;
+        } else {
+          statusBadge = `<span style="font-size: 10px; font-weight: 800; color: #b71c1c; background: #ffebee; padding: 2px 7px; border-radius: 4px; text-transform: uppercase;">Waste Risk</span>`;
+        }
+
+        return `
+          <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-left: 3.5px solid var(--color-muted-rose-currant); border-radius: var(--radius-sm); padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 38px; height: 38px; border-radius: 8px; background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  ${iconSvg}
+                </div>
+                <div>
+                  <h4 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0;">${escapeHtml(item.name)}</h4>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+                    ${escapeHtml(cat)} • ${state.currency} ${item.price || 0}
+                  </div>
+                </div>
+              </div>
+              <div>
+                ${statusBadge}
+              </div>
+            </div>
+
+            <div style="background: var(--bg-subtle); border-radius: 6px; padding: 8px 10px; font-size: 11.5px; line-height: 1.4; color: var(--text-main);">
+              ${escapeHtml(item.reason || 'Item requires review based on current consumption rates and expiry.')}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed var(--border-light);">
+              <div style="font-size: 11px; color: var(--text-muted);">
+                ${item.expiry_date ? `Expiry: <strong style="color: var(--text-main);">${escapeHtml(item.expiry_date)}</strong>` : ''}
+                ${runway !== null ? ` • Runway: <strong>${runway}d</strong>` : ''}
+              </div>
+              <button class="link-btn" style="color: var(--color-periwinkle-amethyst); font-size: 11.5px; font-weight: 700;" onclick="window.viewItemInInventory('${escapeHtml(item.name.replace(/'/g, "\\'"))}')">
+                View in Shelf ›
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <button class="btn-primary" onclick="document.getElementById('attentionItemsModal').classList.remove('active')">
+      Close
+    </button>
+  `;
+
+  modal.classList.add("active");
+};
+
+window.viewItemInInventory = function(productName) {
+  document.getElementById("attentionItemsModal")?.classList.remove("active");
+  window.switchTab("inventory");
+  const searchInput = document.getElementById("inventorySearch");
+  if (searchInput) {
+    searchInput.value = productName;
+    searchInput.dispatchEvent(new Event("input"));
+  }
+};
 
 // -------------------------------------------------------------
 window.renderMonthlyHistory = async function(selectedMonthKey = null) {
